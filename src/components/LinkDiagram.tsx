@@ -52,8 +52,8 @@ export default function LinkDiagram({ link }: LinkDiagramProps) {
             variant={link.stale ? "secondary" : "default"}
             className={
               link.stale
-                ? "bg-[#EE6707] text-white hover:bg-[#90C3EB]"
-                : "bg-[#027FE3] text-white hover:bg-[#90C3EB]"
+               ? "border-[#027FE3] bg-[#027FE3] text-white hover:bg-[#026fc7]"
+: "border-[#EE6707] bg-[#EE6707] text-white hover:bg-[#d85d06]"
             }
           >
             {link.stale ? "Polling" : "Live"}

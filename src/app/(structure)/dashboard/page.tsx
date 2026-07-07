@@ -20,6 +20,8 @@ import RepLog from "../../../components/RepLog";
 import MotionLibrary from "../../../components/MotionLibrary";
 import Sidebar from "../../../components/Sidebar";
 
+const BLUE = "#027FE3";
+const ORANGE = "#EE6707";
 
 const emptySignals = {} as Signals;
 
@@ -187,7 +189,7 @@ export default function Dashboard() {
 
   const mode: "idle" | "recording" | "comparing" = hasCompare ? "comparing" : hasRecord ? "recording" : "idle";
   const modeLabel = { idle: "Idle", recording: "Recording", comparing: "Comparing" }[mode];
-  const modeColor = { idle: "var(--muted)", recording: "var(--teal)", comparing: "var(--amber)" }[mode];
+  const modeColor = { idle: "#71717a", recording: ORANGE, comparing: BLUE }[mode];
 
   const sess = hasCompare ? compareState : recordState;
   const frames = sess ? sess.frames_count ?? 0 : 0;
@@ -214,50 +216,71 @@ export default function Dashboard() {
   const mainStatus = hasCompare ? "Comparing live reps" : hasRecord ? "Recording a baseline" : "Ready to start";
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(94,84,184,0.14),transparent_34%),linear-gradient(180deg,#faf9fd_0%,#f3f1f8_100%)] text-zinc-950">
+    <div className="min-h-screen overflow-x-hidden bg-[#0a0a0c] text-zinc-100">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-8">
-        <div className="rounded-3xl border border-zinc-200/80 bg-white/95 p-6 shadow-sm backdrop-blur">
+        <div className="rounded-3xl border border-zinc-800 bg-zinc-950/95 p-6 shadow-sm backdrop-blur">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
-              <Badge className="border-0 bg-[#ebe8ff] text-[#5e54b8] hover:bg-[#ebe8ff]">Twyst Motion Studio</Badge>
+              <Badge
+                className="border-0 text-white hover:opacity-90"
+                style={{ backgroundColor: BLUE }}
+              >
+                Twyst Motion Studio
+              </Badge>
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Motion dashboard</h1>
-                <p className="max-w-3xl text-sm text-zinc-500 sm:text-base">
+                <h1 className="text-3xl font-semibold tracking-tight text-zinc-100 sm:text-4xl">Motion dashboard</h1>
+                <p className="max-w-3xl text-sm text-zinc-400 sm:text-base">
                   Record a reference motion, stream incoming frames, and compare each repetition in real time.
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={refreshAll}>Refresh all</Button>
-              <a className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50" href="/docs" target="_blank" rel="noreferrer">API docs ↗</a>
-              <a className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50" href="/health" target="_blank" rel="noreferrer">Health</a>
+              <Button
+                onClick={refreshAll}
+                className="border-0 text-white hover:opacity-90"
+                style={{ backgroundColor: BLUE }}
+              >
+                Refresh all
+              </Button>
+              <a
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-sm font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+                href="/docs" target="_blank" rel="noreferrer"
+              >
+                API docs ↗
+              </a>
+              <a
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-sm font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+                href="/health" target="_blank" rel="noreferrer"
+              >
+                Health
+              </a>
             </div>
           </div>
 
-          <Separator className="my-5" />
+          <Separator className="my-5 bg-zinc-800" />
 
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="border-zinc-200 bg-zinc-50/80 shadow-none">
+            <Card className="border-zinc-800 bg-zinc-900/60 shadow-none">
               <CardHeader className="pb-3">
-                <CardDescription>Session status</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-xl">
+                <CardDescription className="text-zinc-500">Session status</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-xl text-zinc-100">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: modeColor }} />
                   {modeLabel}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0 text-sm text-zinc-500">{mainStatus}</CardContent>
             </Card>
-            <Card className="border-zinc-200 bg-zinc-50/80 shadow-none">
+            <Card className="border-zinc-800 bg-zinc-900/60 shadow-none">
               <CardHeader className="pb-3">
-                <CardDescription>Stream counts</CardDescription>
-                <CardTitle className="text-xl">{frames} frame{frames === 1 ? "" : "s"}</CardTitle>
+                <CardDescription className="text-zinc-500">Stream counts</CardDescription>
+                <CardTitle className="text-xl text-zinc-100">{frames} frame{frames === 1 ? "" : "s"}</CardTitle>
               </CardHeader>
               <CardContent className="pt-0 text-sm text-zinc-500">{reps} rep{reps === 1 ? "" : "s"} tracked so far</CardContent>
             </Card>
-            <Card className="border-zinc-200 bg-zinc-50/80 shadow-none">
+            <Card className="border-zinc-800 bg-zinc-900/60 shadow-none">
               <CardHeader className="pb-3">
-                <CardDescription>Reference motion</CardDescription>
-                <CardTitle className="text-xl">{refLabel}</CardTitle>
+                <CardDescription className="text-zinc-500">Reference motion</CardDescription>
+                <CardTitle className="text-xl text-zinc-100">{refLabel}</CardTitle>
               </CardHeader>
               <CardContent className="pt-0 text-sm text-zinc-500">{hasCompare ? "Comparison is using the selected reference." : hasRecord ? "Recording will update the active reference." : refText}</CardContent>
             </Card>

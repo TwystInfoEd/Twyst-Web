@@ -5,6 +5,10 @@ import type { SignalKey, Signals } from "../types/types";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
+// Brand colors
+const COLOR_BLUE = "2,127,227";   // #027FE3 — live signal
+const COLOR_ORANGE = "238,103,7"; // #EE6707 — reference signal
+
 function resizeCanvas(c: HTMLCanvasElement) {
   const dpr = window.devicePixelRatio || 1;
   const rect = c.getBoundingClientRect();
@@ -37,7 +41,7 @@ function drawChart(canvas: HTMLCanvasElement, sig: SignalKey, liveSig: Signals |
 
   ctx.save();
   ctx.translate(0.5, 0.5);
-  ctx.strokeStyle = "rgba(255,255,255,0.04)";
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
   ctx.lineWidth = dpr;
   for (let i = 0; i <= 4; i++) {
     const y = pad + (ph / 4) * i;
@@ -62,10 +66,10 @@ function drawChart(canvas: HTMLCanvasElement, sig: SignalKey, liveSig: Signals |
     ctx!.stroke();
   }
 
-  line(ref, "rgba(201,165,93,0.55)", 1.5);
-  line(live, "rgba(93,201,176,0.9)", 1.5);
+  line(ref, `rgba(${COLOR_ORANGE},0.6)`, 1.5);
+  line(live, `rgba(${COLOR_BLUE},0.95)`, 1.5);
 
-  ctx.fillStyle = "rgba(99,109,126,0.6)";
+  ctx.fillStyle = "rgba(212,212,216,0.6)";
   ctx.font = `${10 * dpr}px SFMono-Regular,Consolas,monospace`;
   ctx.fillText(`${sig}  ·  live ${live.length}${ref.length ? `  ·  ref ${ref.length}` : ""}`, pad, h - 7 * dpr);
   ctx.restore();
@@ -95,22 +99,37 @@ export default function LiveChart({ title, signal, liveSignals, referenceSignals
   }, [signal, liveSignals, referenceSignals]);
 
   return (
-    <Card className="overflow-hidden border-zinc-200/80 bg-white/95">
+    <Card className="overflow-hidden border-zinc-800 bg-zinc-950/95">
       <CardHeader className="pb-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1">
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>Current stream for the selected signal, with the reference overlay when comparison is active.</CardDescription>
+            <CardTitle className="text-zinc-100">{title}</CardTitle>
+            <CardDescription className="text-zinc-400">
+              Current stream for the selected signal, with the reference overlay when comparison is active.
+            </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">live {signal}</Badge>
-            {hasRef && <Badge>ref {signal}</Badge>}
+            <Badge
+              variant="secondary"
+              className="border-0 text-white"
+              style={{ backgroundColor: "#027FE3" }}
+            >
+              live {signal}
+            </Badge>
+            {hasRef && (
+              <Badge
+                className="border-0 text-white"
+                style={{ backgroundColor: "#EE6707" }}
+              >
+                ref {signal}
+              </Badge>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-3">
-          <canvas ref={canvasRef} width={1200} height={400} className="h-[340px] w-full rounded-xl bg-white" />
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-3">
+          <canvas ref={canvasRef} width={1200} height={400} className="h-[340px] w-full rounded-xl bg-zinc-950" />
         </div>
       </CardContent>
     </Card>

@@ -2,7 +2,13 @@ import { SIGNAL_KEYS } from "../types/types";
 import type { MotionInfo, SignalKey } from "../types/types";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Input } from "./ui/input";
 import {
   Select,
@@ -56,8 +62,8 @@ export default function ComparePanel({
             variant="outline"
             className={
               active
-? "border-[#027FE3] bg-[#027FE3] text-white hover:bg-[#026fc7]"
-: "border-[#EE6707] bg-[#EE6707] text-white hover:bg-[#d85d06]"
+                ? "border-[#027FE3] bg-[#027FE3] text-white hover:bg-[#026fc7]"
+                : "border-[#EE6707] bg-[#EE6707] text-white hover:bg-[#d85d06]"
             }
           >
             {active ? "Live" : "Ready"}
@@ -74,28 +80,25 @@ export default function ComparePanel({
             Reference motion
           </label>
 
-          <Select
-  value={reference}
-  onValueChange={setReference}
->
-  <SelectTrigger className="border-zinc-700 bg-zinc-800 text-zinc-100">
-    <SelectValue placeholder="Select a motion" />
-  </SelectTrigger>
+          <Select value={reference} onValueChange={setReference}>
+            <SelectTrigger className="border-zinc-700 bg-zinc-800 text-zinc-100">
+              <SelectValue placeholder="Select a motion" />
+            </SelectTrigger>
 
-  <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
-    {motions.length === 0 ? (
-      <SelectItem value="none" disabled>
-        No saved motions
-      </SelectItem>
-    ) : (
-      motions.map((m) => (
-        <SelectItem key={m.name} value={m.name}>
-          {m.name}
-        </SelectItem>
-      ))
-    )}
-  </SelectContent>
-</Select>
+            <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
+              {motions.length === 0 ? (
+                <SelectItem value="none" disabled>
+                  No saved motions
+                </SelectItem>
+              ) : (
+                motions.map((m) => (
+                  <SelectItem key={m.name} value={m.name}>
+                    {m.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -127,47 +130,37 @@ export default function ComparePanel({
             </label>
 
             <Select
-  value={signal}
-  onValueChange={(value) => setSignal(value as SignalKey)}
->
-  <SelectTrigger className="border-zinc-700 bg-zinc-800 text-zinc-100">
-    <SelectValue />
-  </SelectTrigger>
+              value={signal}
+              onValueChange={(value) => setSignal(value as SignalKey)}
+            >
+              <SelectTrigger className="border-zinc-700 bg-zinc-800 text-zinc-100">
+                <SelectValue />
+              </SelectTrigger>
 
-  <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
-    {SIGNAL_KEYS.map((k) => (
-      <SelectItem key={k} value={k}>
-        {k}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
+              <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100 [&_[data-radix-select-viewport]]:max-h-40 [&_[data-radix-select-viewport]]:overflow-y-auto">
+                {SIGNAL_KEYS.map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {k}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3 pt-2">
-  <Button
-    onClick={onStart}
-    disabled={active || !canStart}
-  >
-    Start compare
-  </Button>
+          <Button onClick={onStart} disabled={active || !canStart}>
+            Start compare
+          </Button>
 
-  <Button
-    variant="destructive"
-    onClick={onStop}
-    disabled={!active}
-  >
-    Stop
-  </Button>
+          <Button variant="destructive" onClick={onStop} disabled={!active}>
+            Stop
+          </Button>
 
-  <Button
-    variant="outline"
-    onClick={onRefresh}
-  >
-    Refresh
-  </Button>
-</div>
+          <Button variant="outline" onClick={onRefresh}>
+            Refresh
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -29,32 +29,43 @@ export default function SessionSnapshot({ session, frame }: SessionSnapshotProps
   const entries = frame ? (Object.entries(frame) as [string, number][]) : [];
 
   return (
-    <Card className="overflow-hidden border-zinc-200/80 bg-white/95">
+    <Card className="overflow-hidden border-zinc-800 bg-zinc-950/95">
       <CardHeader className="pb-4">
-        <CardTitle>Session snapshot</CardTitle>
-        <CardDescription>Live counters and the latest frame payload from the active session.</CardDescription>
+        <CardTitle className="text-zinc-100">Session snapshot</CardTitle>
+        <CardDescription className="text-zinc-400">Live counters and the latest frame payload from the active session.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map(([k, v]) => (
-            <div key={k} className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-3">
+            <div
+              key={k}
+              className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3"
+              style={{ borderLeft: "3px solid #027FE3" }}
+            >
               <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{k}</div>
-              <div className="mt-1 text-sm font-medium text-zinc-950">{v ?? "—"}</div>
+              <div className="mt-1 text-sm font-medium text-zinc-100">{v ?? "—"}</div>
             </div>
           ))}
         </div>
-        <Separator />
-        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500">
-              <tr><th className="px-4 py-3 font-medium">Signal</th><th className="px-4 py-3 font-medium">Value</th></tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200">
-              {entries.length
-                ? entries.map(([k, v]) => <tr key={k}><td className="px-4 py-3 font-medium text-zinc-700">{k}</td><td className="px-4 py-3 text-zinc-950">{fv(v)}</td></tr>)
-                : <tr><td className="px-4 py-6 text-center text-zinc-500" colSpan={2}>No frame data.</td></tr>}
-            </tbody>
-          </table>
+        <Separator className="bg-zinc-800" />
+        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px] text-sm">
+              <thead className="bg-zinc-900 text-left text-xs uppercase tracking-wide text-zinc-500">
+                <tr><th className="whitespace-nowrap px-4 py-3 font-medium">Signal</th><th className="whitespace-nowrap px-4 py-3 font-medium">Value</th></tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {entries.length
+                  ? entries.map(([k, v]) => (
+                      <tr key={k}>
+                        <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-400">{k}</td>
+                        <td className="whitespace-nowrap px-4 py-3 font-semibold" style={{ color: "#EE6707" }}>{fv(v)}</td>
+                      </tr>
+                    ))
+                  : <tr><td className="px-4 py-6 text-center text-zinc-500" colSpan={2}>No frame data.</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </div>
       </CardContent>
     </Card>

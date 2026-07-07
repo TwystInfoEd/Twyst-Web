@@ -40,10 +40,10 @@ export default function BandCard({ link }: BandCardProps) {
             variant="outline"
             className={
               link.stale
-                ? "border-[#EE6707] bg-[#EE6707] text-white hover:bg-[#90C3EB]"
+                ? "border-[#EE6707] bg-[#EE6707] text-white hover:bg-[#d85d06]"
                 : link.main_connected && link.secondary_connected
-                  ? "border-[#027FE3] bg-[#027FE3] text-white hover:bg-[#90C3EB]"
-                  : "border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
+                  ? "border-[#027FE3] bg-[#027FE3] text-white hover:bg-[#026fc7]"
+: "border-[#EE6707] bg-[#EE6707] text-white hover:bg-[#d85d06]"
             }
           >
             {linkState}
