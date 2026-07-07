@@ -3,7 +3,7 @@ import { Badge } from "./ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 function classFor(connected: boolean, stale: boolean): string {
-  return stale ? "amber" : connected ? "teal" : "coral";
+  return stale ? "warning" : connected ? "connected" : "disconnected";
 }
 
 function labelFor(connected: boolean, stale: boolean, detail: string | null): string {
@@ -18,37 +18,81 @@ interface BandCardProps {
 export default function BandCard({ link }: BandCardProps) {
   const mainCls = classFor(link.main_connected, link.stale);
   const secCls = classFor(link.secondary_connected, link.stale);
-  const linkState = link.stale ? "Stale" : link.main_connected && link.secondary_connected ? "Connected" : "Attention";
+
+  const linkState = link.stale
+    ? "Stale"
+    : link.main_connected && link.secondary_connected
+      ? "Connected"
+      : "Attention";
 
   return (
-    <Card className="overflow-hidden border-zinc-200/80 bg-white/95">
+    <Card className="overflow-hidden border-zinc-700 bg-zinc-900 text-zinc-100">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <CardTitle>Band status</CardTitle>
-            <CardDescription>Connection health for the two bands and bridge state.</CardDescription>
+            <CardDescription className="text-zinc-400">
+              Connection health for the two bands and bridge state.
+            </CardDescription>
           </div>
-          <Badge variant={link.stale ? "secondary" : link.main_connected && link.secondary_connected ? "default" : "outline"}>
+
+          <Badge
+            variant="outline"
+            className={
+              link.stale
+                ? "border-[#EE6707] bg-[#EE6707] text-white hover:bg-[#90C3EB]"
+                : link.main_connected && link.secondary_connected
+                  ? "border-[#027FE3] bg-[#027FE3] text-white hover:bg-[#90C3EB]"
+                  : "border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
+            }
+          >
             {linkState}
           </Badge>
         </div>
       </CardHeader>
+
       <CardContent className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4">
+      
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-800 p-4">
           <div className="flex items-center gap-3">
-            <div className={`h-3.5 w-3.5 rounded-full ${mainCls === "teal" ? "bg-emerald-500" : mainCls === "coral" ? "bg-rose-500" : "bg-amber-500"}`} />
+            <div
+              className={`h-3.5 w-3.5 rounded-full ${
+                mainCls === "connected"
+                  ? "bg-[#027FE3]"
+                  : mainCls === "disconnected"
+                    ? "bg-rose-500"
+                    : "bg-[#EE6707]"
+              }`}
+            />
             <div>
-              <div className="text-sm font-semibold text-zinc-950">Main band</div>
-              <div className="text-sm text-zinc-500">{labelFor(link.main_connected, link.stale, link.state)}</div>
+              <div className="text-sm font-semibold text-zinc-100">
+                Main band
+              </div>
+              <div className="text-sm text-zinc-400">
+                {labelFor(link.main_connected, link.stale, link.state)}
+              </div>
             </div>
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4">
+
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-800 p-4">
           <div className="flex items-center gap-3">
-            <div className={`h-3.5 w-3.5 rounded-full ${secCls === "teal" ? "bg-emerald-500" : secCls === "coral" ? "bg-rose-500" : "bg-amber-500"}`} />
+            <div
+              className={`h-3.5 w-3.5 rounded-full ${
+                secCls === "connected"
+                  ? "bg-[#027FE3]"
+                  : secCls === "disconnected"
+                    ? "bg-rose-500"
+                    : "bg-[#EE6707]"
+              }`}
+            />
             <div>
-              <div className="text-sm font-semibold text-zinc-950">Secondary band</div>
-              <div className="text-sm text-zinc-500">{labelFor(link.secondary_connected, link.stale, null)}</div>
+              <div className="text-sm font-semibold text-zinc-100">
+                Secondary band
+              </div>
+              <div className="text-sm text-zinc-400">
+                {labelFor(link.secondary_connected, link.stale, null)}
+              </div>
             </div>
           </div>
         </div>

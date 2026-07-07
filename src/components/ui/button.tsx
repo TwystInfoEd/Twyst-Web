@@ -1,42 +1,69 @@
-import * as React from "react";
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
 
-import { cn } from "../../lib/utils";
+import { cn } from "../../lib/utils"
 
-type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
-type ButtonSize = "default" | "sm" | "lg" | "icon";
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 outline-none disabled:pointer-events-none disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[#027FE3]/40 active:scale-[0.98]",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-[#027FE3] text-white hover:bg-[#026fc7] shadow-md",
 
-const variantClasses: Record<ButtonVariant, string> = {
-  default: "border border-[#4e46a8] bg-[#5e54b8] text-white shadow-sm hover:bg-[#4e46a8]",
-  secondary: "border border-[#ddd6fe] bg-[#ebe8ff] text-[#5e54b8] hover:bg-[#e2dcff]",
-  outline: "border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
-  ghost: "border border-transparent bg-transparent text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
-  destructive: "border border-rose-300 bg-rose-500 text-white hover:bg-rose-600",
-};
+        destructive:
+          "bg-red-600 text-white hover:bg-red-700 shadow-md",
 
-const sizeClasses: Record<ButtonSize, string> = {
-  default: "h-10 px-4 py-2",
-  sm: "h-8 px-3 text-xs",
-  lg: "h-11 px-5 text-sm",
-  icon: "h-10 w-10 p-0",
-};
+        outline:
+          "border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white",
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-}
+        secondary:
+          "bg-[#EE6707] text-white hover:bg-[#d85d06] shadow-md",
 
-export function Button({ className, variant = "default", size = "default", type = "button", ...props }: ButtonProps) {
+        ghost:
+          "bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white",
+
+        link:
+          "text-[#027FE3] underline-offset-4 hover:underline",
+      },
+
+      size: {
+        default: "h-10 px-4",
+        sm: "h-9 px-3",
+        lg: "h-11 px-6",
+        icon: "h-10 w-10",
+      },
+    },
+
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot.Root : "button"
+
   return (
-    <button
-      type={type}
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5e54b8]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
-        variantClasses[variant],
-        sizeClasses[size],
-        className
-      )}
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
-  );
+  )
 }
+
+export { Button, buttonVariants }

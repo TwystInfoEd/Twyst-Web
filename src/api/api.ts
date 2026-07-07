@@ -1,14 +1,5 @@
-// The Python backend's origin. Override at build time with an env var so this
-// app can point at localhost during development and at a real host in
-// production, without touching code.
-//
-// Vite:           VITE_API_BASE_URL=http://localhost:8000
-// Create React App: REACT_APP_API_BASE_URL=http://localhost:8000
-// Next.js:        NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-//
-// Adjust the line below to match whichever bundler this app actually uses.
 export const API_BASE: string =
-  (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:8000";
+  (import.meta as any).env?.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 export async function fetchJson<T = any>(path: string, opts?: RequestInit): Promise<T> {
   const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
