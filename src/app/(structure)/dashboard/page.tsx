@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from "react";
-import { fetchJson } from "../../../api/api";
+import { fetchJson, API_BASE } from "../../../api/api";
 import { usePoll } from "../../../hooks/usePoll";
 import type {
   LinkStatus, MotionInfo, RecordState, CompareState, SignalKey, Signals,
@@ -242,15 +242,15 @@ export default function Dashboard() {
               >
                 Refresh all
               </Button>
-              <a
+               <a
                 className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-sm font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
-                href="/docs" target="_blank" rel="noreferrer"
+                href={`${API_BASE}/docs`} target="_blank" rel="noreferrer"
               >
                 API docs ↗
               </a>
               <a
                 className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-sm font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
-                href="/health" target="_blank" rel="noreferrer"
+                href={`${API_BASE}/health`} target="_blank" rel="noreferrer"
               >
                 Health
               </a>

@@ -1,5 +1,5 @@
 export const API_BASE: string =
-  (import.meta as any).env?.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 export async function fetchJson<T = any>(path: string, opts?: RequestInit): Promise<T> {
   const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
