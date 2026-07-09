@@ -38,6 +38,9 @@ export default function Dashboard() {
   const [reference, setReference] = useState("");
   const [compareOrder, setCompareOrder] = useState(8);
   const [signal, setSignal] = useState<SignalKey>("pitch");
+  
+  // NEW: Toggle state for Single vs Dual mode
+  const [recordMode, setRecordMode] = useState<"single" | "dual">("single");
 
   // Guard against a slightly-stale /record or /compare poll overwriting UI
   // state right after the user just started/stopped a session.
@@ -82,6 +85,7 @@ export default function Dashboard() {
         setCompareState(null);
         setRecordName((cur) => p.motion_name || cur);
         setRecordOrder((cur) => p.bezier_order ?? cur);
+        if (p.mode) setRecordMode(p.mode); // Sync UI toggle with active recording
       }
     } catch (e: any) {
       setRecordState({
@@ -134,12 +138,12 @@ export default function Dashboard() {
     await fetchJson("/record/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ motion_name }),
+      body: JSON.stringify({ motion_name, mode: recordMode }), // Include mode here
     });
     suppressRecordUntil.current = Date.now() + 300;
     setCompareState(null);
     setRecordState({
-      active: true, motion_name, bezier_order: recordOrder,
+      active: true, motion_name, bezier_order: recordOrder, mode: recordMode,
       frames_count: 0, elapsed_seconds: 0, last_frame: null,
       signals: emptySignals, status_text: "Recording…", reps_detected: 0,
     });
@@ -196,6 +200,14 @@ export default function Dashboard() {
   const reps = hasCompare ? compareState!.reps_detected ?? 0 : hasRecord ? recordState!.reps_detected ?? 0 : 0;
   const refLabel = hasCompare ? compareState!.reference_name || "none" : hasRecord ? recordState!.motion_name || "none" : "none";
   const elapsed = sess ? `${(sess.elapsed_seconds ?? 0).toFixed(1)}s` : "0.0s";
+  
+  // Update UI to reflect whether we are in single or dual mode based on active session
+  const activeModeTag = hasCompare 
+    ? compareState!.mode 
+    : hasRecord 
+      ? recordState!.mode 
+      : recordMode;
+
   const refText = hasCompare ? `Ref: ${refLabel}` : hasRecord ? `Rec: ${refLabel}` : "No reference";
 
   const chartTitle = hasCompare ? "Comparison stream" : hasRecord ? "Recording stream" : "Signal preview";
@@ -216,7 +228,7 @@ export default function Dashboard() {
   const mainStatus = hasCompare ? "Comparing live reps" : hasRecord ? "Recording a baseline" : "Ready to start";
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a0a0c] text-zinc-100">
+    <div className="min-h-screen overflow-x-hidden bg-[#0a0a0c] text-zinc-100 suppressHydrationWarning">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-8">
         <div className="rounded-3xl border border-zinc-800 bg-zinc-950/95 p-6 shadow-sm backdrop-blur">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -234,26 +246,58 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={refreshAll}
-                className="border-0 text-white hover:opacity-90"
-                style={{ backgroundColor: BLUE }}
-              >
-                Refresh all
-              </Button>
-               <a
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-sm font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
-                href={`${API_BASE}/docs`} target="_blank" rel="noreferrer"
-              >
-                API docs ↗
-              </a>
-              <a
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-sm font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
-                href={`${API_BASE}/health`} target="_blank" rel="noreferrer"
-              >
-                Health
-              </a>
+            
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap gap-2 lg:justify-end">
+                {/* NEW: Toggle Group for Single vs Dual Mode */}
+                <div className="flex rounded-xl bg-zinc-900 p-1 border border-zinc-800">
+                  <button
+                    disabled={hasRecord || hasCompare}
+                    onClick={() => setRecordMode("single")}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                      recordMode === "single" 
+                        ? "bg-zinc-700 text-zinc-100 shadow" 
+                        : "text-zinc-400 hover:text-zinc-200"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    Single-Band
+                  </button>
+                  <button
+                    disabled={hasRecord || hasCompare}
+                    onClick={() => setRecordMode("dual")}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                      recordMode === "dual" 
+                        ? "bg-zinc-700 text-zinc-100 shadow" 
+                        : "text-zinc-400 hover:text-zinc-200"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    Dual-Band
+                  </button>
+                </div>
+                
+                <Button
+                  onClick={refreshAll}
+                  className="border-0 text-white hover:opacity-90 h-[36px]"
+                  style={{ backgroundColor: BLUE }}
+                >
+                  Refresh all
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 lg:justify-end">
+                 <a
+                  className="inline-flex h-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-xs font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+                  href={`${API_BASE}/docs`} target="_blank" rel="noreferrer"
+                >
+                  API docs ↗
+                </a>
+                <a
+                  className="inline-flex h-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-xs font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+                  href={`${API_BASE}/health`} target="_blank" rel="noreferrer"
+                >
+                  Health
+                </a>
+              </div>
             </div>
           </div>
 
@@ -266,6 +310,9 @@ export default function Dashboard() {
                 <CardTitle className="flex items-center gap-2 text-xl text-zinc-100">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: modeColor }} />
                   {modeLabel}
+                  <Badge variant="outline" className="ml-2 bg-zinc-800 text-zinc-300 border-zinc-700 font-normal">
+                    {activeModeTag === "dual" ? "Dual-Band" : "Single-Band"}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0 text-sm text-zinc-500">{mainStatus}</CardContent>

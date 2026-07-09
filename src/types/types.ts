@@ -9,6 +9,7 @@ export interface LinkStatus {
 
 export interface MotionInfo {
   name: string;
+  mode?: "single" | "dual"; // NEW: Track which mode the reference was recorded in
   bezier_order?: number;
   n_reps_in_reference?: number | string;
   n_frames?: number | string;
@@ -28,20 +29,36 @@ export interface FrameData {
   roll: number;
   pitch: number;
   yaw: number;
+  // NEW: Dual-band main sensor data (optional since single mode omits them)
+  m_acc_x?: number;
+  m_acc_y?: number;
+  m_acc_z?: number;
+  m_gyro_x?: number;
+  m_gyro_y?: number;
+  m_gyro_z?: number;
+  m_roll?: number;
+  m_pitch?: number;
+  m_yaw?: number;
   timestamp?: number;
 }
 
+// NEW: Added the m_ prefixed keys for the main band
 export type SignalKey =
   | "roll" | "pitch" | "yaw"
   | "acc_x" | "acc_y" | "acc_z"
   | "gyro_x" | "gyro_y" | "gyro_z"
-  | "acc_mag" | "gyro_mag";
+  | "acc_mag" | "gyro_mag"
+  | "m_roll" | "m_pitch" | "m_yaw"
+  | "m_acc_x" | "m_acc_y" | "m_acc_z"
+  | "m_gyro_x" | "m_gyro_y" | "m_gyro_z"
+  | "m_acc_mag" | "m_gyro_mag";
 
 export type Signals = Partial<Record<SignalKey, number[]>>;
 
 export interface RecordState {
   active: boolean;
   motion_name: string | null;
+  mode?: "single" | "dual"; // NEW
   frames_count: number;
   elapsed_seconds: number;
   last_frame: FrameData | null;
@@ -64,6 +81,7 @@ export interface CompletedRep {
 export interface CompareState {
   active: boolean;
   reference_name: string | null;
+  mode?: "single" | "dual"; // NEW
   bezier_order: number | null;
   frames_count: number;
   elapsed_seconds: number;
@@ -81,9 +99,14 @@ export interface CompareState {
   last_frame: FrameData | null;
 }
 
+// NEW: Export all keys so dropdown menus (like in ComparePanel) can iterate over them easily
 export const SIGNAL_KEYS: SignalKey[] = [
   "roll", "pitch", "yaw",
   "acc_x", "acc_y", "acc_z",
   "gyro_x", "gyro_y", "gyro_z",
   "acc_mag", "gyro_mag",
+  "m_roll", "m_pitch", "m_yaw",
+  "m_acc_x", "m_acc_y", "m_acc_z",
+  "m_gyro_x", "m_gyro_y", "m_gyro_z",
+  "m_acc_mag", "m_gyro_mag",
 ];
