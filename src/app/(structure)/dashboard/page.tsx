@@ -1,14 +1,25 @@
-'use client';
+"use client";
 
 import { useCallback, useRef, useState } from "react";
 import { fetchJson, API_BASE } from "../../../api/api";
 import { usePoll } from "../../../hooks/usePoll";
 import type {
-  LinkStatus, MotionInfo, RecordState, CompareState, SignalKey, Signals,
+  LinkStatus,
+  MotionInfo,
+  RecordState,
+  CompareState,
+  SignalKey,
+  Signals,
 } from "../../../types/types";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Separator } from "../../../components/ui/separator";
 import BandCard from "../../../components/BandCard";
 import LinkDiagram from "../../../components/LinkDiagram";
@@ -27,7 +38,11 @@ const emptySignals = {} as Signals;
 
 export default function Dashboard() {
   const [link, setLink] = useState<LinkStatus>({
-    main_connected: false, secondary_connected: false, stale: true, state: "unknown", last_update: null,
+    main_connected: false,
+    secondary_connected: false,
+    stale: true,
+    state: "unknown",
+    last_update: null,
   });
   const [motions, setMotions] = useState<MotionInfo[]>([]);
   const [recordState, setRecordState] = useState<RecordState | null>(null);
@@ -38,7 +53,7 @@ export default function Dashboard() {
   const [reference, setReference] = useState("");
   const [compareOrder, setCompareOrder] = useState(8);
   const [signal, setSignal] = useState<SignalKey>("pitch");
-  
+
   // NEW: Toggle state for Single vs Dual mode
   const [recordMode, setRecordMode] = useState<"single" | "dual">("single");
 
@@ -52,7 +67,14 @@ export default function Dashboard() {
       const p = await fetchJson<LinkStatus>("/link/status");
       setLink(p);
     } catch {
-      setLink({ main_connected: false, secondary_connected: false, stale: true, state: "unknown", last_update: null, error: true });
+      setLink({
+        main_connected: false,
+        secondary_connected: false,
+        stale: true,
+        state: "unknown",
+        last_update: null,
+        error: true,
+      });
     }
   }, []);
 
@@ -63,11 +85,13 @@ export default function Dashboard() {
       const details = await Promise.all(
         names.map(async (name): Promise<MotionInfo> => {
           try {
-            return await fetchJson<MotionInfo>(`/motions/${encodeURIComponent(name)}`);
+            return await fetchJson<MotionInfo>(
+              `/motions/${encodeURIComponent(name)}`,
+            );
           } catch {
             return { name, n_frames: "?", n_reps_in_reference: "?" };
           }
-        })
+        }),
       );
       setMotions(details);
       setReference((cur) => cur || (details[0] ? details[0].name : ""));
@@ -89,8 +113,14 @@ export default function Dashboard() {
       }
     } catch (e: any) {
       setRecordState({
-        active: false, motion_name: null, frames_count: 0, elapsed_seconds: 0,
-        last_frame: null, signals: emptySignals, status_text: e.message, reps_detected: 0,
+        active: false,
+        motion_name: null,
+        frames_count: 0,
+        elapsed_seconds: 0,
+        last_frame: null,
+        signals: emptySignals,
+        status_text: e.message,
+        reps_detected: 0,
       });
     }
   }, []);
@@ -107,12 +137,23 @@ export default function Dashboard() {
       }
     } catch (e: any) {
       setCompareState({
-        active: false, reference_name: null, bezier_order: null, frames_count: 0,
-        elapsed_seconds: 0, reps_detected: 0, current_rep_progress: 0,
-        last_rep_curve_distance: 0, last_rep_amplitude_diff: 0, score: 0,
-        direction_ok: true, direction_hint: "", feedback: e.message,
-        live_signals: emptySignals, reference_signals: emptySignals,
-        completed_reps: [], last_frame: null,
+        active: false,
+        reference_name: null,
+        bezier_order: null,
+        frames_count: 0,
+        elapsed_seconds: 0,
+        reps_detected: 0,
+        current_rep_progress: 0,
+        last_rep_curve_distance: 0,
+        last_rep_amplitude_diff: 0,
+        score: 0,
+        direction_ok: true,
+        direction_hint: "",
+        feedback: e.message,
+        live_signals: emptySignals,
+        reference_signals: emptySignals,
+        completed_reps: [],
+        last_frame: null,
       });
     }
   }, []);
@@ -127,14 +168,22 @@ export default function Dashboard() {
     refreshMotions().catch(() => {});
     refreshRecordState().catch(() => {});
     refreshCompareState().catch(() => {});
-  }, [refreshCompareState, refreshLinkStatus, refreshMotions, refreshRecordState]);
+  }, [
+    refreshCompareState,
+    refreshLinkStatus,
+    refreshMotions,
+    refreshRecordState,
+  ]);
 
   const hasCompare = !!(compareState && compareState.active);
   const hasRecord = !!(recordState && recordState.active);
 
   async function startRecording() {
     const motion_name = recordName.trim();
-    if (!motion_name) { alert("Enter a motion name."); return; }
+    if (!motion_name) {
+      alert("Enter a motion name.");
+      return;
+    }
     await fetchJson("/record/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -143,43 +192,75 @@ export default function Dashboard() {
     suppressRecordUntil.current = Date.now() + 300;
     setCompareState(null);
     setRecordState({
-      active: true, motion_name, bezier_order: recordOrder, mode: recordMode,
-      frames_count: 0, elapsed_seconds: 0, last_frame: null,
-      signals: emptySignals, status_text: "Recording…", reps_detected: 0,
+      active: true,
+      motion_name,
+      bezier_order: recordOrder,
+      mode: recordMode,
+      frames_count: 0,
+      elapsed_seconds: 0,
+      last_frame: null,
+      signals: emptySignals,
+      status_text: "Recording…",
+      reps_detected: 0,
     });
   }
 
   async function stopRecording() {
-    const p = await fetchJson<{ motion_name: string; reps_detected: number; n_frames: number }>(
-      `/record/stop?bezier_order=${encodeURIComponent(recordOrder)}`, { method: "POST" }
-    );
+    const p = await fetchJson<{
+      motion_name: string;
+      reps_detected: number;
+      n_frames: number;
+    }>(`/record/stop?bezier_order=${encodeURIComponent(recordOrder)}`, {
+      method: "POST",
+    });
     suppressRecordUntil.current = Date.now() + 300;
     setRecordState(null);
     await refreshMotions();
-    alert(`Saved as ${p.motion_name}. ${p.reps_detected} reps from ${p.n_frames} frames.`);
+    alert(
+      `Saved as ${p.motion_name}. ${p.reps_detected} reps from ${p.n_frames} frames.`,
+    );
   }
 
   async function startComparison() {
-    if (!reference) { alert("Choose a saved motion."); return; }
+    if (!reference) {
+      alert("Choose a saved motion.");
+      return;
+    }
     await fetchJson("/compare/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reference_name: reference, bezier_order: compareOrder }),
+      body: JSON.stringify({
+        reference_name: reference,
+        bezier_order: compareOrder,
+      }),
     });
     suppressCompareUntil.current = Date.now() + 300;
     setRecordState(null);
     setCompareState({
-      active: true, reference_name: reference, bezier_order: compareOrder,
-      frames_count: 0, elapsed_seconds: 0, reps_detected: 0, current_rep_progress: 0,
-      last_rep_curve_distance: 0, last_rep_amplitude_diff: 0,
-      direction_ok: true, direction_hint: "",
-      live_signals: emptySignals, reference_signals: emptySignals,
-      completed_reps: [], score: 0, feedback: "Comparison started…", last_frame: null,
+      active: true,
+      reference_name: reference,
+      bezier_order: compareOrder,
+      frames_count: 0,
+      elapsed_seconds: 0,
+      reps_detected: 0,
+      current_rep_progress: 0,
+      last_rep_curve_distance: 0,
+      last_rep_amplitude_diff: 0,
+      direction_ok: true,
+      direction_hint: "",
+      live_signals: emptySignals,
+      reference_signals: emptySignals,
+      completed_reps: [],
+      score: 0,
+      feedback: "Comparison started…",
+      last_frame: null,
     });
   }
 
   async function stopComparison() {
-    const p = await fetchJson<{ overall_feedback?: string }>("/compare/stop", { method: "POST" });
+    const p = await fetchJson<{ overall_feedback?: string }>("/compare/stop", {
+      method: "POST",
+    });
     suppressCompareUntil.current = Date.now() + 300;
     setCompareState(null);
     alert(p.overall_feedback || "Comparison stopped.");
@@ -187,31 +268,63 @@ export default function Dashboard() {
 
   async function deleteMotion(name: string) {
     if (!confirm(`Delete ${name}?`)) return;
-    await fetchJson(`/motions/${encodeURIComponent(name)}`, { method: "DELETE" });
+    await fetchJson(`/motions/${encodeURIComponent(name)}`, {
+      method: "DELETE",
+    });
     await refreshMotions();
   }
 
-  const mode: "idle" | "recording" | "comparing" = hasCompare ? "comparing" : hasRecord ? "recording" : "idle";
-  const modeLabel = { idle: "Idle", recording: "Recording", comparing: "Comparing" }[mode];
-  const modeColor = { idle: "#71717a", recording: ORANGE, comparing: BLUE }[mode];
+  const mode: "idle" | "recording" | "comparing" = hasCompare
+    ? "comparing"
+    : hasRecord
+      ? "recording"
+      : "idle";
+  const modeLabel = {
+    idle: "Idle",
+    recording: "Recording",
+    comparing: "Comparing",
+  }[mode];
+  const modeColor = { idle: "#71717a", recording: ORANGE, comparing: BLUE }[
+    mode
+  ];
 
   const sess = hasCompare ? compareState : recordState;
-  const frames = sess ? sess.frames_count ?? 0 : 0;
-  const reps = hasCompare ? compareState!.reps_detected ?? 0 : hasRecord ? recordState!.reps_detected ?? 0 : 0;
-  const refLabel = hasCompare ? compareState!.reference_name || "none" : hasRecord ? recordState!.motion_name || "none" : "none";
+  const frames = sess ? (sess.frames_count ?? 0) : 0;
+  const reps = hasCompare
+    ? (compareState!.reps_detected ?? 0)
+    : hasRecord
+      ? (recordState!.reps_detected ?? 0)
+      : 0;
+  const refLabel = hasCompare
+    ? compareState!.reference_name || "none"
+    : hasRecord
+      ? recordState!.motion_name || "none"
+      : "none";
   const elapsed = sess ? `${(sess.elapsed_seconds ?? 0).toFixed(1)}s` : "0.0s";
-  
+
   // Update UI to reflect whether we are in single or dual mode based on active session
-  const activeModeTag = hasCompare 
-    ? compareState!.mode 
-    : hasRecord 
-      ? recordState!.mode 
+  const activeModeTag = hasCompare
+    ? compareState!.mode
+    : hasRecord
+      ? recordState!.mode
       : recordMode;
 
-  const refText = hasCompare ? `Ref: ${refLabel}` : hasRecord ? `Rec: ${refLabel}` : "No reference";
+  const refText = hasCompare
+    ? `Ref: ${refLabel}`
+    : hasRecord
+      ? `Rec: ${refLabel}`
+      : "No reference";
 
-  const chartTitle = hasCompare ? "Comparison stream" : hasRecord ? "Recording stream" : "Signal preview";
-  const liveSignals = hasCompare ? compareState!.live_signals : hasRecord ? recordState!.signals : emptySignals;
+  const chartTitle = hasCompare
+    ? "Comparison stream"
+    : hasRecord
+      ? "Recording stream"
+      : "Signal preview";
+  const liveSignals = hasCompare
+    ? compareState!.live_signals
+    : hasRecord
+      ? recordState!.signals
+      : emptySignals;
   const referenceSignals = hasCompare ? compareState!.reference_signals : null;
 
   const feedback = hasCompare
@@ -223,9 +336,15 @@ export default function Dashboard() {
   const completedReps = hasCompare ? compareState!.completed_reps || [] : [];
   const currentRepLabel = hasCompare
     ? `Rep ${completedReps.length + 1} (${Math.round((compareState!.current_rep_progress || 0) * 100)}%)`
-    : hasRecord ? "Recording" : "—";
+    : hasRecord
+      ? "Recording"
+      : "—";
 
-  const mainStatus = hasCompare ? "Comparing live reps" : hasRecord ? "Recording a baseline" : "Ready to start";
+  const mainStatus = hasCompare
+    ? "Comparing live reps"
+    : hasRecord
+      ? "Recording a baseline"
+      : "Ready to start";
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0a0a0c] text-zinc-100 suppressHydrationWarning">
@@ -240,23 +359,25 @@ export default function Dashboard() {
                 Twyst Motion Studio
               </Badge>
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-zinc-100 sm:text-4xl">Motion dashboard</h1>
+                <h1 className="text-3xl font-semibold tracking-tight text-zinc-100 sm:text-4xl">
+                  Motion dashboard
+                </h1>
                 <p className="max-w-3xl text-sm text-zinc-400 sm:text-base">
-                  Record a reference motion, stream incoming frames, and compare each repetition in real time.
+                  Record a reference motion, stream incoming frames, and compare
+                  each repetition in real time.
                 </p>
               </div>
             </div>
-            
+
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap gap-2 lg:justify-end">
-                {/* NEW: Toggle Group for Single vs Dual Mode */}
                 <div className="flex rounded-xl bg-zinc-900 p-1 border border-zinc-800">
                   <button
                     disabled={hasRecord || hasCompare}
                     onClick={() => setRecordMode("single")}
                     className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                      recordMode === "single" 
-                        ? "bg-zinc-700 text-zinc-100 shadow" 
+                      recordMode === "single"
+                        ? "bg-zinc-700 text-zinc-100 shadow"
                         : "text-zinc-400 hover:text-zinc-200"
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
@@ -266,15 +387,15 @@ export default function Dashboard() {
                     disabled={hasRecord || hasCompare}
                     onClick={() => setRecordMode("dual")}
                     className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                      recordMode === "dual" 
-                        ? "bg-zinc-700 text-zinc-100 shadow" 
+                      recordMode === "dual"
+                        ? "bg-zinc-700 text-zinc-100 shadow"
                         : "text-zinc-400 hover:text-zinc-200"
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     Dual-Band
                   </button>
                 </div>
-                
+
                 <Button
                   onClick={refreshAll}
                   className="border-0 text-white hover:opacity-90 h-[36px]"
@@ -285,15 +406,25 @@ export default function Dashboard() {
               </div>
 
               <div className="flex flex-wrap gap-2 lg:justify-end">
-                 <a
+                <a
+                  href="/home"
                   className="inline-flex h-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-xs font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
-                  href={`${API_BASE}/docs`} target="_blank" rel="noreferrer"
+                >
+                  Home
+                </a>
+                <a
+                  className="inline-flex h-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-xs font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+                  href={`${API_BASE}/docs`}
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   API docs ↗
                 </a>
                 <a
                   className="inline-flex h-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-xs font-medium text-zinc-300 shadow-sm transition-colors hover:bg-zinc-800 hover:text-zinc-100"
-                  href={`${API_BASE}/health`} target="_blank" rel="noreferrer"
+                  href={`${API_BASE}/health`}
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   Health
                 </a>
@@ -306,30 +437,56 @@ export default function Dashboard() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="border-zinc-800 bg-zinc-900/60 shadow-none">
               <CardHeader className="pb-3">
-                <CardDescription className="text-zinc-500">Session status</CardDescription>
+                <CardDescription className="text-zinc-500">
+                  Session status
+                </CardDescription>
                 <CardTitle className="flex items-center gap-2 text-xl text-zinc-100">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: modeColor }} />
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ background: modeColor }}
+                  />
                   {modeLabel}
-                  <Badge variant="outline" className="ml-2 bg-zinc-800 text-zinc-300 border-zinc-700 font-normal">
+                  <Badge
+                    variant="outline"
+                    className="ml-2 bg-zinc-800 text-zinc-300 border-zinc-700 font-normal"
+                  >
                     {activeModeTag === "dual" ? "Dual-Band" : "Single-Band"}
                   </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 text-sm text-zinc-500">{mainStatus}</CardContent>
+              <CardContent className="pt-0 text-sm text-zinc-500">
+                {mainStatus}
+              </CardContent>
             </Card>
             <Card className="border-zinc-800 bg-zinc-900/60 shadow-none">
               <CardHeader className="pb-3">
-                <CardDescription className="text-zinc-500">Stream counts</CardDescription>
-                <CardTitle className="text-xl text-zinc-100">{frames} frame{frames === 1 ? "" : "s"}</CardTitle>
+                <CardDescription className="text-zinc-500">
+                  Stream counts
+                </CardDescription>
+                <CardTitle className="text-xl text-zinc-100">
+                  {frames} frame{frames === 1 ? "" : "s"}
+                </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 text-sm text-zinc-500">{reps} rep{reps === 1 ? "" : "s"} tracked so far</CardContent>
+              <CardContent className="pt-0 text-sm text-zinc-500">
+                {reps} rep{reps === 1 ? "" : "s"} tracked so far
+              </CardContent>
             </Card>
             <Card className="border-zinc-800 bg-zinc-900/60 shadow-none">
               <CardHeader className="pb-3">
-                <CardDescription className="text-zinc-500">Reference motion</CardDescription>
-                <CardTitle className="text-xl text-zinc-100">{refLabel}</CardTitle>
+                <CardDescription className="text-zinc-500">
+                  Reference motion
+                </CardDescription>
+                <CardTitle className="text-xl text-zinc-100">
+                  {refLabel}
+                </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 text-sm text-zinc-500">{hasCompare ? "Comparison is using the selected reference." : hasRecord ? "Recording will update the active reference." : refText}</CardContent>
+              <CardContent className="pt-0 text-sm text-zinc-500">
+                {hasCompare
+                  ? "Comparison is using the selected reference."
+                  : hasRecord
+                    ? "Recording will update the active reference."
+                    : refText}
+              </CardContent>
             </Card>
           </div>
         </div>
@@ -342,18 +499,25 @@ export default function Dashboard() {
 
             <div className="grid gap-6 lg:grid-cols-2">
               <RecordPanel
-                name={recordName} setName={setRecordName}
-                order={recordOrder} setOrder={setRecordOrder}
+                name={recordName}
+                setName={setRecordName}
+                order={recordOrder}
+                setOrder={setRecordOrder}
                 active={hasRecord}
                 onStart={() => startRecording().catch((e) => alert(e.message))}
                 onStop={() => stopRecording().catch((e) => alert(e.message))}
                 onRefresh={() => refreshRecordState().catch(() => {})}
               />
               <ComparePanel
-                motions={motions} reference={reference} setReference={setReference}
-                order={compareOrder} setOrder={setCompareOrder}
-                signal={signal} setSignal={setSignal}
-                active={hasCompare} canStart={!!reference}
+                motions={motions}
+                reference={reference}
+                setReference={setReference}
+                order={compareOrder}
+                setOrder={setCompareOrder}
+                signal={signal}
+                setSignal={setSignal}
+                active={hasCompare}
+                canStart={!!reference}
                 onStart={() => startComparison().catch((e) => alert(e.message))}
                 onStop={() => stopComparison().catch((e) => alert(e.message))}
                 onRefresh={() => refreshCompareState().catch(() => {})}
@@ -361,19 +525,39 @@ export default function Dashboard() {
             </div>
 
             <LiveChart
-              title={chartTitle} signal={signal}
-              liveSignals={liveSignals} referenceSignals={referenceSignals}
+              title={chartTitle}
+              signal={signal}
+              liveSignals={liveSignals}
+              referenceSignals={referenceSignals}
               hasRef={hasCompare}
             />
 
             <div className="grid gap-6 lg:grid-cols-2">
               <SessionSnapshot
                 session={{
-                  session: mode === "comparing" ? "compare" : mode === "recording" ? "record" : "idle",
-                  frames, reference: refLabel, reps, elapsed,
-                  status: hasCompare ? "Active" : hasRecord ? "Recording" : "Idle",
+                  session:
+                    mode === "comparing"
+                      ? "compare"
+                      : mode === "recording"
+                        ? "record"
+                        : "idle",
+                  frames,
+                  reference: refLabel,
+                  reps,
+                  elapsed,
+                  status: hasCompare
+                    ? "Active"
+                    : hasRecord
+                      ? "Recording"
+                      : "Idle",
                 }}
-                frame={hasCompare ? compareState!.last_frame : hasRecord ? recordState!.last_frame : null}
+                frame={
+                  hasCompare
+                    ? compareState!.last_frame
+                    : hasRecord
+                      ? recordState!.last_frame
+                      : null
+                }
               />
               <RepLog reps={completedReps} />
             </div>
@@ -391,7 +575,9 @@ export default function Dashboard() {
             completedCount={hasCompare ? completedReps.length : 0}
             currentRepLabel={currentRepLabel}
             curve={hasCompare ? compareState!.last_rep_curve_distance : null}
-            amplitude={hasCompare ? compareState!.last_rep_amplitude_diff : null}
+            amplitude={
+              hasCompare ? compareState!.last_rep_amplitude_diff : null
+            }
             progress={hasCompare ? compareState!.current_rep_progress : 0}
             feedback={feedback}
             reps={completedReps}
@@ -401,7 +587,8 @@ export default function Dashboard() {
         </div>
 
         <div className="pb-2 text-center text-xs text-zinc-500">
-          Compare mode keeps the ESP32 bridge streaming while this page stays open.
+          Compare mode keeps the ESP32 bridge streaming while this page stays
+          open.
         </div>
       </div>
     </div>
