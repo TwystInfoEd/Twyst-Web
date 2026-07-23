@@ -9,7 +9,7 @@ export interface LinkStatus {
 
 export interface MotionInfo {
   name: string;
-  mode?: "single" | "dual"; // NEW: Track which mode the reference was recorded in
+  mode?: "single" | "dual"; 
   bezier_order?: number;
   n_reps_in_reference?: number | string;
   n_frames?: number | string;
@@ -29,7 +29,7 @@ export interface FrameData {
   roll: number;
   pitch: number;
   yaw: number;
-  // NEW: Dual-band main sensor data (optional since single mode omits them)
+  
   m_acc_x?: number;
   m_acc_y?: number;
   m_acc_z?: number;
@@ -42,7 +42,6 @@ export interface FrameData {
   timestamp?: number;
 }
 
-// NEW: Added the m_ prefixed keys for the main band
 export type SignalKey =
   | "roll" | "pitch" | "yaw"
   | "acc_x" | "acc_y" | "acc_z"
@@ -55,10 +54,17 @@ export type SignalKey =
 
 export type Signals = Partial<Record<SignalKey, number[]>>;
 
+export interface BatteryStatus {
+  available: boolean;
+  voltage: number | null;
+  percent: number | null;
+  stale: boolean;
+  last_update: number | null;
+}
 export interface RecordState {
   active: boolean;
   motion_name: string | null;
-  mode?: "single" | "dual"; // NEW
+  mode?: "single" | "dual"; 
   frames_count: number;
   elapsed_seconds: number;
   last_frame: FrameData | null;
@@ -81,7 +87,7 @@ export interface CompletedRep {
 export interface CompareState {
   active: boolean;
   reference_name: string | null;
-  mode?: "single" | "dual"; // NEW
+  mode?: "single" | "dual"; 
   bezier_order: number | null;
   frames_count: number;
   elapsed_seconds: number;
@@ -99,7 +105,6 @@ export interface CompareState {
   last_frame: FrameData | null;
 }
 
-// NEW: Export all keys so dropdown menus (like in ComparePanel) can iterate over them easily
 export const SIGNAL_KEYS: SignalKey[] = [
   "roll", "pitch", "yaw",
   "acc_x", "acc_y", "acc_z",

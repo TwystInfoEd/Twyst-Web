@@ -10,6 +10,7 @@ import type {
   CompareState,
   SignalKey,
   Signals,
+  BatteryStatus,
 } from "../../../types/types";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -36,6 +37,7 @@ const ORANGE = "#EE6707";
 
 const emptySignals = {} as Signals;
 
+
 export default function Dashboard() {
   const [link, setLink] = useState<LinkStatus>({
     main_connected: false,
@@ -44,6 +46,7 @@ export default function Dashboard() {
     state: "unknown",
     last_update: null,
   });
+
   const [motions, setMotions] = useState<MotionInfo[]>([]);
   const [recordState, setRecordState] = useState<RecordState | null>(null);
   const [compareState, setCompareState] = useState<CompareState | null>(null);
@@ -54,11 +57,8 @@ export default function Dashboard() {
   const [compareOrder, setCompareOrder] = useState(8);
   const [signal, setSignal] = useState<SignalKey>("pitch");
 
-  // NEW: Toggle state for Single vs Dual mode
   const [recordMode, setRecordMode] = useState<"single" | "dual">("single");
 
-  // Guard against a slightly-stale /record or /compare poll overwriting UI
-  // state right after the user just started/stopped a session.
   const suppressRecordUntil = useRef(0);
   const suppressCompareUntil = useRef(0);
 
@@ -74,6 +74,21 @@ export default function Dashboard() {
         state: "unknown",
         last_update: null,
         error: true,
+      });
+    }
+  }, []);
+
+  const refreshBattery = useCallback(async () => {
+    try {
+      const p = await fetchJson<BatteryStatus>("/battery/status");
+      setBattery(p);
+    } catch {
+      setBattery({
+        available: false,
+        voltage: null,
+        percent: null,
+        stale: true,
+        last_update: null,
       });
     }
   }, []);
@@ -95,9 +110,7 @@ export default function Dashboard() {
       );
       setMotions(details);
       setReference((cur) => cur || (details[0] ? details[0].name : ""));
-    } catch {
-      // leave motions as-is on failure
-    }
+    } catch {}
   }, []);
 
   const refreshRecordState = useCallback(async () => {
@@ -109,7 +122,7 @@ export default function Dashboard() {
         setCompareState(null);
         setRecordName((cur) => p.motion_name || cur);
         setRecordOrder((cur) => p.bezier_order ?? cur);
-        if (p.mode) setRecordMode(p.mode); // Sync UI toggle with active recording
+        if (p.mode) setRecordMode(p.mode);
       }
     } catch (e: any) {
       setRecordState({
@@ -159,18 +172,21 @@ export default function Dashboard() {
   }, []);
 
   usePoll(refreshLinkStatus, 1000);
+  usePoll(refreshBattery, 2000);
   usePoll(refreshMotions, 5000);
   usePoll(refreshRecordState, 400);
   usePoll(refreshCompareState, 400);
 
   const refreshAll = useCallback(() => {
     refreshLinkStatus().catch(() => {});
+    refreshBattery().catch(() => {});
     refreshMotions().catch(() => {});
     refreshRecordState().catch(() => {});
     refreshCompareState().catch(() => {});
   }, [
     refreshCompareState,
     refreshLinkStatus,
+    refreshBattery,
     refreshMotions,
     refreshRecordState,
   ]);
@@ -187,7 +203,7 @@ export default function Dashboard() {
     await fetchJson("/record/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ motion_name, mode: recordMode }), // Include mode here
+      body: JSON.stringify({ motion_name, mode: recordMode }), 
     });
     suppressRecordUntil.current = Date.now() + 300;
     setCompareState(null);
@@ -216,9 +232,9 @@ export default function Dashboard() {
     suppressRecordUntil.current = Date.now() + 300;
     setRecordState(null);
     await refreshMotions();
-    alert(
-      `Saved as ${p.motion_name}. ${p.reps_detected} reps from ${p.n_frames} frames.`,
-    );
+    // alert(
+    //   `Saved as ${p.motion_name}. ${p.reps_detected} reps from ${p.n_frames} frames.`,
+    // );
   }
 
   async function startComparison() {
@@ -263,7 +279,7 @@ export default function Dashboard() {
     });
     suppressCompareUntil.current = Date.now() + 300;
     setCompareState(null);
-    alert(p.overall_feedback || "Comparison stopped.");
+    // alert(p.overall_feedback || "Comparison stopped.");
   }
 
   async function deleteMotion(name: string) {
@@ -346,6 +362,13 @@ export default function Dashboard() {
       ? "Recording a baseline"
       : "Ready to start";
 
+const [battery, setBattery] = useState<BatteryStatus>({
+  available: false,
+  voltage: null,
+  percent: null,
+  stale: true,
+  last_update: null,
+});
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0a0a0c] text-zinc-100 suppressHydrationWarning">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-8">
@@ -492,6 +515,46 @@ export default function Dashboard() {
         </div>
 
         <BandCard link={link} />
+
+        <Card className="border-zinc-800 bg-zinc-900/60 shadow-none">
+          <CardHeader className="pb-3">
+            <CardDescription className="text-zinc-500">
+              Secondary band battery
+            </CardDescription>
+            <CardTitle className="flex items-center gap-2 text-xl text-zinc-100">
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{
+                  background: !battery.available
+                    ? "#71717a"
+                    : (battery.percent ?? 0) < 20
+                      ? "#EF4444"
+                      : (battery.percent ?? 0) < 40
+                        ? ORANGE
+                        : "#22C55E",
+                }}
+              />
+              {battery.available && battery.percent !== null
+                ? `${Math.round(battery.percent)}%`
+                : "Unavailable"}
+              {battery.available && (
+                <Badge
+                  variant="outline"
+                  className="ml-2 bg-zinc-800 text-zinc-300 border-zinc-700 font-normal"
+                >
+                  {battery.voltage?.toFixed(2)}V
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 text-sm text-zinc-500">
+            {!battery.available
+              ? "No battery telemetry — check divider wiring or board config."
+              : battery.stale
+                ? "Reading is stale — no recent frames."
+                : "Live reading from the secondary band."}
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-6">
